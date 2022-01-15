@@ -32,7 +32,7 @@ class PhpDebug extends HTMLElement {
 			  background-color: rgb(40, 42, 54);
 			  overflow: hidden;
 			  position: absolute;
-        z-index=10000;
+        z-index: 10000;
 		  }
 		
 		  .dragHeader {
