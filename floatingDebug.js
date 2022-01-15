@@ -44,7 +44,12 @@ class PhpDebug extends HTMLElement {
 		  .dragContent {
 			  padding: 2px 5px;
 			  color: rgb(80, 250, 123);
-		  }	  
+		  }	
+
+      .dragContent > img {
+        border-radius: 5px;
+        margin-top: 5px;
+      }
 		`;
 
     // Attach the created elements to the shadow dom
