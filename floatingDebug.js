@@ -1,78 +1,108 @@
-(function makeDragable(dragHandle, dragTarget, dragContent) {
-  let dragObj = null; //object to be moved
-  let xOffset = 0; //used to prevent dragged object jumping to mouse location
-  let yOffset = 0;
+class PhpDebug extends HTMLElement {
+  constructor() {
+    super();
 
-  // Elements
-  const dragHandleElement = document.querySelector(dragHandle);
-  const dragBodyElement = document.querySelector(dragTarget);
-  const dragContentElement = document.querySelector(dragContent);
+    // Create a shadow root
+    const shadow = this.attachShadow({ mode: "open" });
 
-  // Listeners
-  dragHandleElement.addEventListener("mousedown", startDrag, true);
-  dragHandleElement.addEventListener("touchstart", startDrag, true);
+    // Create elements
+    const dragBody = document.createElement("div");
+    dragBody.setAttribute("class", "dragBody");
 
-  (function applyStyles() {
-    // Top bar styles
-    dragHandleElement.style.width = "100%";
-    dragHandleElement.style.height = "20px";
-    dragHandleElement.style.backgroundColor = "#6272a4";
-    dragHandleElement.style;
-    dragHandleElement.style;
+    const dragHeader = document.createElement("div");
+    dragHeader.setAttribute("class", "dragHeader");
 
-    // Body styles
-    dragBodyElement.style.borderRadius = "6px";
-    dragBodyElement.style.border = "solid 2px #44475a";
-    dragBodyElement.style.width = "fit-content";
-    dragBodyElement.style.backgroundColor = "#282a36";
-    dragBodyElement.style.overflow = "hidden";
+    const dragContent = document.createElement("pre");
+    dragContent.setAttribute("class", "dragContent");
 
-    // Content styles
-    dragContentElement.style.padding = "2px 5px";
-    dragContentElement.style.color = "#50fa7b";
-  })();
+    // Take attribute content and put it inside the info pre
+    const text = this.getAttribute("data-debug");
+    dragContent.textContent = text;
 
-  /*sets offset parameters and starts listening for mouse-move*/
-  function startDrag(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    dragObj = document.querySelector(dragTarget);
-    dragObj.style.position = "absolute";
-    let rect = dragObj.getBoundingClientRect();
+    // Create some CSS to apply to the shadow dom
+    const style = document.createElement("style");
 
-    if (e.type == "mousedown") {
-      xOffset = e.clientX - rect.left; //clientX and getBoundingClientRect() both use viewable area adjusted when scrolling aka 'viewport'
-      yOffset = e.clientY - rect.top;
-      window.addEventListener("mousemove", dragObject, true);
-    } else if (e.type == "touchstart") {
-      xOffset = e.targetTouches[0].clientX - rect.left;
-      yOffset = e.targetTouches[0].clientY - rect.top;
-      window.addEventListener("touchmove", dragObject, true);
+    style.textContent = `
+		  .dragBody {
+			  border-radius: 6px;
+			  border: 2px solid rgb(68, 71, 90);
+			  width: fit-content;
+			  background-color: rgb(40, 42, 54);
+			  overflow: hidden;
+			  position: absolute;
+		  }
+		
+		  .dragHeader {
+			  width: 100%;
+			  height: 20px;
+			  background-color: rgb(98, 114, 164);
+		  }
+		
+		  .dragContent {
+			  padding: 2px 5px;
+			  color: rgb(80, 250, 123);
+		  }	  
+		`;
+
+    // Attach the created elements to the shadow dom
+    shadow.appendChild(style);
+    shadow.appendChild(dragBody);
+    dragBody.appendChild(dragHeader);
+    dragBody.appendChild(dragContent);
+
+    let dragObj = null; //object to be moved
+    let xOffset = 0; //used to prevent dragged object jumping to mouse location
+    let yOffset = 0;
+
+    // Elements
+    // Listeners
+    dragHeader.addEventListener("mousedown", startDrag, true);
+    dragHeader.addEventListener("touchstart", startDrag, true);
+
+    /*sets offset parameters and starts listening for mouse-move*/
+    function startDrag(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dragObj = dragBody;
+      let rect = dragObj.getBoundingClientRect();
+
+      if (e.type == "mousedown") {
+        xOffset = e.clientX - rect.left; //clientX and getBoundingClientRect() both use viewable area adjusted when scrolling aka 'viewport'
+        yOffset = e.clientY - rect.top;
+        window.addEventListener("mousemove", dragObject, true);
+      } else if (e.type == "touchstart") {
+        xOffset = e.targetTouches[0].clientX - rect.left;
+        yOffset = e.targetTouches[0].clientY - rect.top;
+        window.addEventListener("touchmove", dragObject, true);
+      }
     }
+
+    /*Drag object*/
+    function dragObject(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (dragObj == null) {
+        return; // if there is no object being dragged then do nothing
+      } else if (e.type == "mousemove") {
+        dragObj.style.left = e.clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
+        dragObj.style.top = e.clientY - yOffset + "px";
+      } else if (e.type == "touchmove") {
+        dragObj.style.left = e.targetTouches[0].clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
+        dragObj.style.top = e.targetTouches[0].clientY - yOffset + "px";
+      }
+    }
+
+    /*End dragging*/
+    document.onmouseup = function (e) {
+      if (dragObj) {
+        dragObj = null;
+        window.removeEventListener("mousemove", dragObject, true);
+        window.removeEventListener("touchmove", dragObject, true);
+      }
+    };
   }
+}
 
-  /*Drag object*/
-  function dragObject(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (dragObj == null) {
-      return; // if there is no object being dragged then do nothing
-    } else if (e.type == "mousemove") {
-      dragObj.style.left = e.clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
-      dragObj.style.top = e.clientY - yOffset + "px";
-    } else if (e.type == "touchmove") {
-      dragObj.style.left = e.targetTouches[0].clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
-      dragObj.style.top = e.targetTouches[0].clientY - yOffset + "px";
-    }
-  }
-
-  /*End dragging*/
-  document.onmouseup = function (e) {
-    if (dragObj) {
-      dragObj = null;
-      window.removeEventListener("mousemove", dragObject, true);
-      window.removeEventListener("touchmove", dragObject, true);
-    }
-  };
-})("[data-lc-moveHeader]", "[data-lc-moveBody]", "[data-lc-content]");
+// Define the new element
+customElements.define("php-debug", PhpDebug);
