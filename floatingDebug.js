@@ -4,7 +4,6 @@ class PhpDebug extends HTMLElement {
 
     // Create a shadow root
     const shadow = this.attachShadow({ mode: "open" });
-
     // Create elements
     const dragBody = document.createElement("div");
     dragBody.setAttribute("class", "dragBody");
@@ -18,6 +17,9 @@ class PhpDebug extends HTMLElement {
     // Take attribute content and put it inside the info pre
     const text = this.getAttribute("data-debug");
     dragContent.textContent = text;
+
+    const template = document.createElement("template");
+    template.innerHTML = "<slot></slot>";
 
     // Create some CSS to apply to the shadow dom
     const style = document.createElement("style");
@@ -49,9 +51,12 @@ class PhpDebug extends HTMLElement {
     shadow.appendChild(dragBody);
     dragBody.appendChild(dragHeader);
     dragBody.appendChild(dragContent);
+    dragContent.appendChild(template.content.cloneNode(true));
 
-    let dragObj = null; //object to be moved
-    let xOffset = 0; //used to prevent dragged object jumping to mouse location
+    // Object to be moved
+    let dragObj = null;
+    // Used to prevent dragged object jumping to mouse location
+    let xOffset = 0;
     let yOffset = 0;
 
     // Elements
@@ -59,7 +64,7 @@ class PhpDebug extends HTMLElement {
     dragHeader.addEventListener("mousedown", startDrag, true);
     dragHeader.addEventListener("touchstart", startDrag, true);
 
-    /*sets offset parameters and starts listening for mouse-move*/
+    /* Sets offset parameters and starts listening for mouse-move*/
     function startDrag(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -67,7 +72,8 @@ class PhpDebug extends HTMLElement {
       let rect = dragObj.getBoundingClientRect();
 
       if (e.type == "mousedown") {
-        xOffset = e.clientX - rect.left; //clientX and getBoundingClientRect() both use viewable area adjusted when scrolling aka 'viewport'
+        // ClientX and getBoundingClientRect() both use viewable area adjusted when scrolling aka 'viewport'
+        xOffset = e.clientX - rect.left;
         yOffset = e.clientY - rect.top;
         window.addEventListener("mousemove", dragObject, true);
       } else if (e.type == "touchstart") {
@@ -83,12 +89,15 @@ class PhpDebug extends HTMLElement {
       e.stopPropagation();
 
       if (dragObj == null) {
-        return; // if there is no object being dragged then do nothing
+        // If there is no object being dragged then do nothing
+        return;
       } else if (e.type == "mousemove") {
-        dragObj.style.left = e.clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
+        // Adjust location of dragged object so doesn't jump to mouse position
+        dragObj.style.left = e.clientX - xOffset + "px";
         dragObj.style.top = e.clientY - yOffset + "px";
       } else if (e.type == "touchmove") {
-        dragObj.style.left = e.targetTouches[0].clientX - xOffset + "px"; // adjust location of dragged object so doesn't jump to mouse position
+        // Adjust location of dragged object so doesn't jump to mouse position
+        dragObj.style.left = e.targetTouches[0].clientX - xOffset + "px";
         dragObj.style.top = e.targetTouches[0].clientY - yOffset + "px";
       }
     }
