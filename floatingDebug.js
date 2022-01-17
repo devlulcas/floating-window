@@ -1,5 +1,5 @@
 class PhpDebug extends HTMLElement {
-  static debugCounter = 1;
+  static debugCounter = 0;
 
   constructor() {
     super();
