@@ -1,4 +1,6 @@
 class PhpDebug extends HTMLElement {
+  static debugCounter = 1;
+
   constructor() {
     super();
 
@@ -10,6 +12,20 @@ class PhpDebug extends HTMLElement {
 
     const dragHeader = document.createElement("div");
     dragHeader.setAttribute("class", "dragHeader");
+
+    const debugCounterSpan = document.createElement("span");
+    debugCounterSpan.setAttribute("class", "debugCounterSpan");
+    PhpDebug.debugCounter++;
+    debugCounterSpan.textContent = `Debug ${PhpDebug.debugCounter}`;
+
+    const minimizeButton = document.createElement("button");
+    minimizeButton.setAttribute("class", "minimizeButton");
+
+    const closeButton = document.createElement("button");
+    closeButton.setAttribute("class", "closeButton");
+
+    const maximizeButton = document.createElement("button");
+    maximizeButton.setAttribute("class", "maximizeButton");
 
     const dragContent = document.createElement("pre");
     dragContent.setAttribute("class", "dragContent");
@@ -25,30 +41,84 @@ class PhpDebug extends HTMLElement {
     const style = document.createElement("style");
 
     style.textContent = `
-		  .dragBody {
-			  border-radius: 6px;
-			  border: 2px solid rgb(68, 71, 90);
-			  width: fit-content;
-			  background-color: rgb(40, 42, 54);
-			  overflow: hidden;
-			  position: absolute;
+      .dragBody {
+        border-radius: 6px;
+        border: 2px solid #44475a;
+        width: fit-content;
+        background-color: #282a36;
+        overflow: hidden;
+        position: absolute;
         z-index: 10000;
-		  }
-		
-		  .dragHeader {
-			  width: 100%;
-			  height: 20px;
-			  background-color: rgb(98, 114, 164);
-		  }
-		
-		  .dragContent {
-			  padding: 2px 5px;
-			  color: rgb(80, 250, 123);
-		  }	
+        font-family: 'Fira Code', monospace;
+        resize: both;
+      }
+      
+      .dragHeader {
+        display: flex;
+        align-items: center;
+        justify-content: end;
+        gap: 4px;
+        width: 100%;
+        height: 25px;
+        background-color: #6272a4;
+      }
 
+      .debugCounterSpan {
+        width: calc(100% - 111px);
+        text-align: center;
+        color: #f8f8f2;
+
+      }
+      
+      .dragHeader button  {
+        width: 18px;
+        height: 18px;
+        border: solid 2px #44475a;
+        border-radius: 50%;
+      }
+
+      .minimizeButton {
+        background: #f1fa8c;
+      }
+
+      .maximizeButton {
+        background: #50fa7b;
+      }
+
+      .closeButton {
+        background: #ff5555;
+      }
+
+      .dragContent {
+        margin: 0;
+        padding: 5px;
+        font-size: 18px;
+        color: rgb(80, 250, 123);
+      }
+      
+      .dragContent slot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      
       .dragContent > img {
-        border-radius: 5px;
-        margin-top: 5px;
+        border-radius: 15px;
+      }
+
+      .closeWindow {
+        opacity: 0;
+        visibility: hidden;
+      }
+
+      .maximizeWindow {
+        width: 98%;
+        height: 98%;
+      }
+      
+      .minimizeWindow {
+        height: 0px;
       }
 		`;
 
@@ -56,6 +126,10 @@ class PhpDebug extends HTMLElement {
     shadow.appendChild(style);
     shadow.appendChild(dragBody);
     dragBody.appendChild(dragHeader);
+    dragHeader.appendChild(debugCounterSpan);
+    dragHeader.appendChild(minimizeButton);
+    dragHeader.appendChild(maximizeButton);
+    dragHeader.appendChild(closeButton);
     dragBody.appendChild(dragContent);
     dragContent.appendChild(template.content.cloneNode(true));
 
@@ -70,7 +144,7 @@ class PhpDebug extends HTMLElement {
     dragHeader.addEventListener("mousedown", startDrag, true);
     dragHeader.addEventListener("touchstart", startDrag, true);
 
-    /* Sets offset parameters and starts listening for mouse-move*/
+    // Sets offset parameters and starts listening for mouse-move
     function startDrag(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -89,11 +163,9 @@ class PhpDebug extends HTMLElement {
       }
     }
 
-    /*Drag object*/
     function dragObject(e) {
       e.preventDefault();
       e.stopPropagation();
-
       if (dragObj == null) {
         // If there is no object being dragged then do nothing
         return;
@@ -108,14 +180,46 @@ class PhpDebug extends HTMLElement {
       }
     }
 
-    /*End dragging*/
-    document.onmouseup = function (e) {
+    window.addEventListener("mouseup", endDragging, true);
+
+    function endDragging(e) {
       if (dragObj) {
         dragObj = null;
         window.removeEventListener("mousemove", dragObject, true);
         window.removeEventListener("touchmove", dragObject, true);
       }
-    };
+    }
+
+    closeButton.addEventListener("click", closeDebug);
+    maximizeButton.addEventListener("click", maximizeDebug);
+    minimizeButton.addEventListener("click", minimizeDebug);
+
+    let isMaximized = false;
+    let isMinimized = false;
+
+    function closeDebug() {
+      dragBody.classList.add("closeWindow");
+    }
+
+    function maximizeDebug() {
+      isMaximized = !isMaximized;
+      dragContent.classList.remove("minimizeWindow");
+      if (isMaximized) {
+        dragBody.classList.remove("maximizeWindow");
+        return;
+      }
+      dragBody.classList.add("maximizeWindow");
+    }
+
+    function minimizeDebug() {
+      isMinimized = !isMinimized;
+      dragBody.classList.remove("maximizeWindow");
+      if (isMinimized) {
+        dragContent.classList.add("minimizeWindow");
+        return;
+      }
+      dragContent.classList.remove("minimizeWindow");
+    }
   }
 }
 
