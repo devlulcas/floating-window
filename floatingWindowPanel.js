@@ -1,22 +1,25 @@
-class PhpDebug extends HTMLElement {
-  static debugCounter = 0;
+class FloatingWindowPanel extends HTMLElement {
+  static windowCounter = 0;
 
   constructor() {
     super();
 
     // Create a shadow root
     const shadow = this.attachShadow({ mode: "open" });
+
     // Create elements
+    // Body - Container
     const dragBody = document.createElement("div");
     dragBody.setAttribute("class", "dragBody");
 
+    // Header - Drag bar and function buttons
     const dragHeader = document.createElement("div");
     dragHeader.setAttribute("class", "dragHeader");
 
-    const debugCounterSpan = document.createElement("span");
-    debugCounterSpan.setAttribute("class", "debugCounterSpan");
-    PhpDebug.debugCounter++;
-    debugCounterSpan.textContent = `Debug ${PhpDebug.debugCounter}`;
+    const windowCounterSpan = document.createElement("span");
+    windowCounterSpan.setAttribute("class", "windowCounterSpan");
+    FloatingWindowPanel.windowCounter++;
+    windowCounterSpan.textContent = `Window ${FloatingWindowPanel.windowCounter}`;
 
     const minimizeButton = document.createElement("button");
     minimizeButton.setAttribute("class", "minimizeButton");
@@ -27,11 +30,15 @@ class PhpDebug extends HTMLElement {
     const maximizeButton = document.createElement("button");
     maximizeButton.setAttribute("class", "maximizeButton");
 
+    // Content - Displayed information
+    const dragContentContainer = document.createElement("div");
+    dragContentContainer.setAttribute("class", "dragContentContainer");
+
     const dragContent = document.createElement("pre");
     dragContent.setAttribute("class", "dragContent");
 
     // Take attribute content and put it inside the info pre
-    const text = this.getAttribute("data-debug");
+    const text = this.getAttribute("data-information");
     dragContent.textContent = text;
 
     const template = document.createElement("template");
@@ -63,8 +70,9 @@ class PhpDebug extends HTMLElement {
         background-color: #6272a4;
       }
 
-      .debugCounterSpan {
+      .windowCounterSpan {
         width: calc(100% - 111px);
+        min-width: fit-content;
         text-align: center;
         color: #f8f8f2;
 
@@ -114,7 +122,7 @@ class PhpDebug extends HTMLElement {
 
       .maximizeWindow {
         width: 98%;
-        height: 98%;
+        min-height: 98%;
       }
       
       .minimizeWindow {
@@ -125,12 +133,19 @@ class PhpDebug extends HTMLElement {
     // Attach the created elements to the shadow dom
     shadow.appendChild(style);
     shadow.appendChild(dragBody);
+
+    // Append header container an it's elements
     dragBody.appendChild(dragHeader);
-    dragHeader.appendChild(debugCounterSpan);
+    dragHeader.appendChild(windowCounterSpan);
     dragHeader.appendChild(minimizeButton);
     dragHeader.appendChild(maximizeButton);
     dragHeader.appendChild(closeButton);
-    dragBody.appendChild(dragContent);
+
+    // Append contents
+    dragBody.appendChild(dragContentContainer);
+    dragContentContainer.appendChild(dragContent);
+
+    // Makes possible to get DOM elements inside web component
     dragContent.appendChild(template.content.cloneNode(true));
 
     // Object to be moved
@@ -190,18 +205,18 @@ class PhpDebug extends HTMLElement {
       }
     }
 
-    closeButton.addEventListener("click", closeDebug);
-    maximizeButton.addEventListener("click", maximizeDebug);
-    minimizeButton.addEventListener("click", minimizeDebug);
+    closeButton.addEventListener("click", closeWindow);
+    maximizeButton.addEventListener("click", maximizeWindow);
+    minimizeButton.addEventListener("click", minimizeWindow);
 
     let isMaximized = false;
     let isMinimized = false;
 
-    function closeDebug() {
+    function closeWindow() {
       dragBody.classList.add("closeWindow");
     }
 
-    function maximizeDebug() {
+    function maximizeWindow() {
       isMaximized = !isMaximized;
       dragContent.classList.remove("minimizeWindow");
       if (isMaximized) {
@@ -211,7 +226,7 @@ class PhpDebug extends HTMLElement {
       dragBody.classList.add("maximizeWindow");
     }
 
-    function minimizeDebug() {
+    function minimizeWindow() {
       isMinimized = !isMinimized;
       dragBody.classList.remove("maximizeWindow");
       if (isMinimized) {
@@ -224,4 +239,4 @@ class PhpDebug extends HTMLElement {
 }
 
 // Define the new element
-customElements.define("php-debug", PhpDebug);
+customElements.define("floating-window", FloatingWindowPanel);
