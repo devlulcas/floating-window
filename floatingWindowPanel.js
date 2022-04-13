@@ -52,6 +52,8 @@ class FloatingWindowPanel extends HTMLElement {
         border-radius: 6px;
         border: 2px solid #44475a;
         width: fit-content;
+        min-width: 15rem;
+        min-height: 10rem;
         background-color: #282a36;
         overflow: hidden;
         position: absolute;
